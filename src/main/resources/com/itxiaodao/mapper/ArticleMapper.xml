@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itxiaodao.mapper.ArticleMapper">
+
+    <resultMap id="ArticleResultMap" type="com.itxiaodao.pojo.Article">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="coverImg" column="coverImg"/>
+        <result property="intcircleId" column="intcircleId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="like" column="like"/>
+        <result property="comment" column="comment"/>
+        <association property="host" javaType="com.itxiaodao.pojo.Host">
+            <result property="nickname" column="hostNickname"/>
+            <result property="avatar" column="hostAvatar"/>
+        </association>
+    </resultMap>
+
+    <select id="list" resultMap="ArticleResultMap" resultType="com.itxiaodao.pojo.Article">
+        SELECT
+            a.id,
+            a.title,
+            a.content,
+            a.cover_img AS coverImg,
+            a.intcircle_id AS intcircleId,
+            a.create_time AS createTime,
+            a.`like`,
+            IFNULL(COUNT(c.id), 0) AS comment,
+            u.nickname AS hostNickname,
+            u.avatar   AS hostAvatar
+        FROM sys_article a
+        JOIN sys_user u ON a.create_user = u.id
+        LEFT JOIN sys_comments c ON a.id = c.article_id
+        <where>
+            <if test="intcircleId!=null">
+                intcircle_id=#{intcircleId}
+            </if>
+        </where>
+        GROUP BY a.id, a.title, a.content, a.cover_img, a.intcircle_id, a.create_time, a.`like`, u.nickname, u.avatar
+    </select>
+
+    <select id="findById" resultMap="ArticleResultMap" resultType="com.itxiaodao.pojo.Article">
+        SELECT
+            a.id,
+            a.title,
+            a.content,
+            a.cover_img AS coverImg,
+            a.intcircle_id AS intcircleId,
+            a.create_time AS createTime,
+            a.`like`,
+            a.comment,
+            u.nickname AS hostNickname,
+            u.avatar   AS hostAvatar
+        FROM sys_article a
+                 JOIN sys_user u ON a.create_user = u.id
+        WHERE a.id = #{id}
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="articlepostlist" resultMap="ArticleResultMap" resultType="com.itxiaodao.pojo.Article">
+        SELECT
+            a.id,
+            a.title,
+            a.content,
+            a.cover_img AS coverImg,
+            a.intcircle_id AS intcircleId,
+            a.create_time AS createTime,
+            a.`like`,
+            IFNULL(COUNT(c.id), 0) AS comment,
+            u.nickname AS hostNickname,
+            u.avatar   AS hostAvatar
+        FROM sys_article a
+        JOIN sys_user u ON a.create_user = u.id
+        LEFT JOIN sys_comments c ON a.id = c.article_id
+        WHERE a.create_user = #{userId}
+        GROUP BY a.id, a.title, a.content, a.cover_img, a.intcircle_id, a.create_time, a.`like`, u.nickname, u.avatar
+
+    </select>
+</mapper>

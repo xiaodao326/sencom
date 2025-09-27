@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itxiaodao.mapper.UserMapper">
+    <resultMap id="UserWithTags" type="com.itxiaodao.pojo.User">
+        <id property="id" column="id"/>
+        <result property="account" column="account"/>
+        <result property="nickname" column="nickname"/>
+        <result property="phone" column="phone"/>
+        <result property="avatar" column="avatar"/>
+        <result property="gender" column="gender"/>
+        <result property="address" column="address"/>
+        <result property="birth" column="birth"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <collection property="tags" ofType="com.itxiaodao.pojo.Tag">
+            <id property="id" column="tag_id"/>
+            <result property="name" column="tag_name"/>
+        </collection>
+    </resultMap>
+
+    <select id="findByAccountWithTag" resultMap="UserWithTags" resultType="com.itxiaodao.pojo.User">
+        SELECT u.id,
+               u.account,
+               u.nickname,
+               u.phone,
+               u.avatar,
+               u.gender,
+               u.address,
+               u.birth,
+               u.create_time,
+               u.update_time,
+               t.id AS tag_id,
+               t.name AS tag_name
+        FROM sys_user u
+        LEFT JOIN sys_user_tag ut ON u.id = ut.user_id
+        LEFT JOIN sys_tag t ON ut.tag_id = t.id
+        WHERE u.account = #{account}
+    </select>
+</mapper>

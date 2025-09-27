@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itxiaodao.mapper.IntcircleMapper">
+
+
+    <resultMap id="IntCircleResultMap" type="com.itxiaodao.pojo.IntCircle">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="introduce" column="introduce"/>
+        <result property="avatar" column="avatar"/>
+        <result property="categoryId" column="categoryId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="address" column="address"/>
+        <result property="longitude" column="longitude"/>
+        <result property="latitude" column="latitude"/>
+        <association property="host" javaType="com.itxiaodao.pojo.Host">
+            <result property="nickname" column="hostNickname"/>
+            <result property="avatar" column="hostAvatar"/>
+        </association>
+    </resultMap>
+
+    <select id="selectNearby" resultMap="IntCircleResultMap">
+        <![CDATA[
+        SELECT
+        c.id,
+        c.name,
+        c.introduce,
+        c.avatar,
+        c.category_id AS categoryId,
+        c.create_time AS createTime,
+        c.address,
+        ST_Y(c.location) AS longitude,
+        ST_X(c.location) AS latitude,
+        u.nickname AS hostNickname,
+        u.avatar AS hostAvatar,
+        ST_Distance_Sphere(
+        c.location,
+        ST_GeomFromText(CONCAT('POINT(', #{latitude}, ' ', #{longitude}, ')'), 4326)
+        ) AS distance
+        FROM sys_intcircle c
+        LEFT JOIN sys_user u ON c.create_user = u.id
+        WHERE ST_Distance_Sphere(
+        c.location,
+        ST_GeomFromText(CONCAT('POINT(', #{latitude}, ' ', #{longitude}, ')'), 4326)
+        )<= 5000
+        ORDER BY distance ASC
+        ]]>
+    </select>
+
+
+    <select id="list" resultMap="IntCircleResultMap" resultType="com.itxiaodao.pojo.IntCircle">
+        SELECT
+        c.id,
+        c.name,
+        c.introduce,
+        c.avatar,
+        c.category_id AS categoryId,
+        c.create_time AS createTime,
+        c.address,
+        ST_Y(c.location) AS longitude,
+        ST_X(c.location) AS latitude,
+        u.nickname AS hostNickname,
+        u.avatar AS hostAvatar
+        FROM sys_intcircle c
+        JOIN sys_user u ON c.create_user = u.id
+        JOIN sys_user_intcircle uc ON uc.intcircle_id = c.id
+        <where>
+            <if test="categoryId!=null">
+                category_id=#{categoryId}
+            </if>
+        </where>
+        ORDER BY c.update_time DESC
+    </select>
+
+    <select id="getMyIntCircles" resultMap="IntCircleResultMap" resultType="com.itxiaodao.pojo.IntCircle">
+        SELECT
+            c.id,
+            c.name,
+            c.introduce,
+            c.avatar,
+            c.category_id AS categoryId,
+            c.create_time AS createTime,
+            c.address,
+            ST_Y(c.location) AS longitude,
+            ST_X(c.location) AS latitude,
+            u.nickname AS hostNickname,
+            u.avatar AS hostAvatar
+        FROM sys_intcircle c
+                 JOIN sys_user u ON c.create_user = u.id
+                 JOIN sys_user_intcircle uc ON uc.intcircle_id = c.id
+        WHERE uc.user_id = #{userId}
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="findById" resultMap="IntCircleResultMap" resultType="com.itxiaodao.pojo.IntCircle">
+        SELECT
+            c.id,
+            c.name,
+            c.introduce,
+            c.avatar,
+            c.category_id AS categoryId,
+            c.create_time AS createTime,
+            c.address,
+            ST_Y(c.location) AS longitude,
+            ST_X(c.location) AS latitude,
+            u.nickname AS hostNickname,
+            u.avatar AS hostAvatar
+        FROM sys_intcircle c
+                 JOIN sys_user u ON c.create_user = u.id
+                 JOIN sys_user_intcircle uc ON uc.intcircle_id = c.id
+        WHERE c.id = #{id}
+        ORDER BY c.create_time DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itxiaodao.mapper.ActivityMapper">
+
+    <resultMap id="ActivityResultMap" type="com.itxiaodao.pojo.Activity">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="introduce" column="introduce"/>
+        <result property="time" column="time"/>
+        <result property="location" column="location"/>
+        <result property="intcircleId" column="intcircleId"/>
+        <result property="createTime" column="createTime"/>
+        <association property="host" javaType="com.itxiaodao.pojo.Host">
+            <result property="nickname" column="hostNickname"/>
+            <result property="avatar" column="hostAvatar"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="ActivityResultWithSignUpMap" type="com.itxiaodao.pojo.Activity">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="introduce" column="introduce"/>
+        <result property="time" column="time"/>
+        <result property="location" column="location"/>
+        <result property="intcircleId" column="intcircleId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="signupTotal" column="total"/>
+
+        <!-- host 封装 -->
+        <association property="host" javaType="com.itxiaodao.pojo.Host">
+            <result property="nickname" column="hostNickname"/>
+            <result property="avatar" column="hostAvatar"/>
+        </association>
+
+        <!-- 报名用户列表 -->
+        <collection property="signupUsers" ofType="com.itxiaodao.pojo.User">
+            <result property="id" column="signupUserId"/>
+            <result property="nickname" column="signupUserNickname"/>
+            <result property="avatar" column="signupUserAvatar"/>
+            <result property="phone" column="signupUserPhone"/>
+        </collection>
+    </resultMap>
+
+    <select id="list" resultMap="ActivityResultMap" resultType="com.itxiaodao.pojo.Activity">
+        SELECT
+        a.id,
+        a.title,
+        a.introduce,
+        a.time,
+        a.location,
+        a.intcircle_id AS intcircleId,
+        a.create_time AS createTime,
+        u.nickname AS hostNickname,
+        u.avatar   AS hostAvatar
+        FROM sys_activity a
+        JOIN sys_user u ON a.create_user = u.id
+        <where>
+            <if test="intcircleId!=null">
+                intcircle_id=#{intcircleId}
+            </if>
+        </where>
+    </select>
+    <select id="findById" resultMap="ActivityResultWithSignUpMap" resultType="com.itxiaodao.pojo.Activity">
+        SELECT
+            a.id,
+            a.title,
+            a.introduce,
+            a.time,
+            a.location,
+            a.intcircle_id AS intcircleId,
+            a.create_time AS createTime,
+            (SELECT COUNT(*) FROM sys_user_activity ua2 WHERE ua2.activity_id = a.id) AS total,
+            hu.nickname AS hostNickname,
+            hu.avatar   AS hostAvatar,
+            su.id       AS signupUserId,
+            su.nickname AS signupUserNickname,
+            su.avatar   AS signupUserAvatar,
+            su.phone    AS signupUserPhone
+        FROM sys_activity a
+        JOIN sys_user hu ON a.create_user = hu.id
+        LEFT JOIN sys_user_activity ua ON a.id = ua.activity_id
+        LEFT JOIN sys_user su ON su.id = ua.user_id
+        WHERE a.id = #{id}
+        ORDER BY a.create_time DESC
+    </select>
+    <select id="activepostlist" resultMap="ActivityResultMap" resultType="com.itxiaodao.pojo.Activity">
+        SELECT
+        a.id,
+        a.title,
+        a.introduce,
+        a.time,
+        a.location,
+        a.intcircle_id AS intcircleId,
+        a.create_time AS createTime,
+        u.nickname AS hostNickname,
+        u.avatar   AS hostAvatar
+        FROM sys_activity a
+        JOIN sys_user u ON a.create_user = u.id
+        WHERE a.create_user = #{userId}
+    </select>
+    <select id="activejoinlist" resultMap="ActivityResultMap" resultType="com.itxiaodao.pojo.Activity">
+        SELECT
+            a.id,
+            a.title,
+            a.introduce,
+            a.time,
+            a.location,
+            a.intcircle_id AS intcircleId,
+            a.create_time AS createTime,
+            u.nickname AS hostNickname,
+            u.avatar   AS hostAvatar
+        FROM sys_activity a
+        JOIN sys_user u ON a.create_user = u.id
+        JOIN sys_user_activity ua
+        WHERE ua.user_id = #{userId}
+    </select>
+
+</mapper>
